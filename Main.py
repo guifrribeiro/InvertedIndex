@@ -1,3 +1,5 @@
+import sys
+
 from pip._vendor.distlib.compat import raw_input
 
 from Database import Database
@@ -13,21 +15,28 @@ def main():
     db = Database()
     index = InvertedIndex(db)
 
-    document1 = {
-        'id': '1',
-        'text': 'The big sharks of Belgium drink beer.'
-    }
+    num_files = 0
+    # Read the base file. Output: db
+    with open(sys.argv[1], 'r') as files:
+        contents = files.read()
+        for lines in contents.split("\n"):
+            num_files += 1
+            # Open and read the files
+            with open(lines, 'r') as cont:
+                document = {
+                    'id': num_files,
+                    'name': lines,
+                    'text': cont.read()
+                }
+                index.index_document(document)
 
-    document2 = {
-        'id': '2',
-        'text': 'Belgium has great beer. They drink beer all the time.'
-    }
-
-    index.index_document(document1)
-    index.index_document(document2)
+    for texts in range(0, len(index.db)):
+        print(texts)
 
     search_term = raw_input("Enter term(s) to search: ")
     result = index.lookup_query(search_term)
+
+    print(result)
 
     for term in result.keys():
         for appearance in result[term]:

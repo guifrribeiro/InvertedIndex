@@ -38,3 +38,5 @@ class InvertedIndex:
 
     def lookup_query(self, query):
         return {term: self.index[term] for term in query.split(' ') if term in self.index}
+
+    def
