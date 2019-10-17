@@ -1,6 +1,7 @@
 import sys
+import nltk
 
-from pip._vendor.distlib.compat import raw_input
+from collections import Counter
 
 from Database import Database
 from InvertedIndex import InvertedIndex
@@ -15,6 +16,9 @@ def main():
     db = Database()
     index = InvertedIndex(db)
 
+    stopwords = nltk.corpus.stopwords.words("portuguese")
+    stopwords.sort()
+
     num_files = 0
     # Read the base file. Output: db
     with open(sys.argv[1], 'r') as files:
@@ -28,21 +32,31 @@ def main():
                     'name': lines,
                     'text': cont.read()
                 }
-                index.index_document(document)
+                index.index_document(document, stopwords)
 
-    for texts in range(0, len(index.db)):
-        print(texts)
+    file_query = open(sys.argv[2], 'r')
+    result = index.lookup_query(file_query.read())
 
-    search_term = raw_input("Enter term(s) to search: ")
-    result = index.lookup_query(search_term)
-
-    print(result)
-
+    # Write on file indice
+    file_index = open("output/indice.txt", "w+")
     for term in result.keys():
+        file_index.write(term + ": ")
         for appearance in result[term]:
             document = db.get(appearance.docIndex)
-            print(highlight_term(appearance.docIndex, term, document['text']))
-            print("-----------------------")
+            file_index.write(str(appearance.docIndex) + "," + str(appearance.frequency) + " ")
+        file_index.write("\n")
+    file_index.close()
 
+    # Write on file resultado
+    files_names = []
+    for term in result.keys():
+        for val in result[term]:
+            files_names.append(val.name)
 
+    file_result = open("output/resultado.txt", "w+")
+    file_result.write(str(len(Counter(files_names).keys())) + "\n")
+    for file_name in Counter(files_names).keys():
+        file_result.write(file_name + "\n")
+
+    file_result.close()
 main()
