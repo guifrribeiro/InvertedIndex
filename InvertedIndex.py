@@ -1,6 +1,5 @@
 import re
 import nltk
-import sys
 
 from Appearance import Appearance
 
@@ -13,30 +12,31 @@ class InvertedIndex:
         self.db = db
         self.terms = []
         self.radicals = []
-        self.radicalsAux = []
+        self.list = []
 
     def __repr__(self):
         return str(self.index)
 
     # Processing a document
-    def index_document(self, document, stopwords):
+    def index_document(self, document, stopwords, radicals):
         # Remove punctuation from the text
         clean_text = re.sub(r'[^\w\s]', '', document['text'])
 
-        terms = nltk.word_tokenize(clean_text)
+        listAux = []
+
+        self.terms = nltk.word_tokenize(clean_text)
         appearances_dict = dict()
 
         stemmer = nltk.stem.RSLPStemmer()
-        var = [stemmer.stem(term) for term in terms if term not in stopwords]
-        self.radicals.append(var)
-        self.radicalsAux += var
-        self.radicals.sort()
-        self.radicalsAux.sort()
-        print(self.radicals)
-        print(self.radicalsAux)
+        var = [stemmer.stem(term) for term in self.terms if term not in stopwords]
+        listAux += var
+        self.list.append(var)
+        listAux.sort()
+        self.list.sort()
 
+        radicals += [x for i, x in enumerate(listAux) if i == listAux.index(x)]
         # Counts the frequency of terms
-        for term in terms:
+        for term in self.terms:
             term_frequency = appearances_dict[term].frequency if term in appearances_dict else 0
             appearances_dict[term] = Appearance(document['id'], document['name'], term_frequency + 1)
 
@@ -52,3 +52,13 @@ class InvertedIndex:
 
     def lookup_query(self, query):
         return {term: self.index[term] for term in query.split(' ') if term in self.index}
+
+    def countWords(self, word, list):
+        frequency = ""
+        i = 0
+        for items in list:
+            i += 1
+            if items.count(word) > 0:
+                frequency += (str(i) + ',' + str(items.count(word)) + ' ')
+
+        return word + ": " + frequency

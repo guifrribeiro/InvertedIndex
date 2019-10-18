@@ -7,11 +7,6 @@ from Database import Database
 from InvertedIndex import InvertedIndex
 
 
-def highlight_term(id, term, text):
-    replaced_text = text.replace(term, "\033[1;32;40m {term}\033[0;0m".format(term=term))
-    return "--- document {id}: {replaced}".format(id=id, replaced=replaced_text)
-
-
 def main():
     db = Database()
     index = InvertedIndex(db)
@@ -19,6 +14,7 @@ def main():
     stopwords = nltk.corpus.stopwords.words("portuguese")
     stopwords.sort()
 
+    radicals = []
     num_files = 0
     # Read the base file. Output: db
     with open(sys.argv[1], 'r') as files:
@@ -32,19 +28,15 @@ def main():
                     'name': lines,
                     'text': cont.read()
                 }
-                index.index_document(document, stopwords)
+                index.index_document(document, stopwords, radicals)
 
     file_query = open(sys.argv[2], 'r')
     result = index.lookup_query(file_query.read())
 
+
     # Write on file indice
     file_index = open("output/indice.txt", "w+")
-    for term in result.keys():
-        file_index.write(term + ": ")
-        for appearance in result[term]:
-            document = db.get(appearance.docIndex)
-            file_index.write(str(appearance.docIndex) + "," + str(appearance.frequency) + " ")
-        file_index.write("\n")
+    [file_index.write(index.countWords(word, index.list) + "\n") for word in Counter(radicals).keys()]
     file_index.close()
 
     # Write on file resultado
@@ -59,4 +51,6 @@ def main():
         file_result.write(file_name + "\n")
 
     file_result.close()
+
 main()
+

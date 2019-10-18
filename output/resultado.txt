@@ -1,0 +1,3 @@
+2
+input/b.txt
+input/c.txt
